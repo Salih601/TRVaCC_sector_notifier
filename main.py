@@ -1,60 +1,87 @@
 import requests
 import os
+import time
+
+VATSIM_DATA_URL = "https://data.vatsim.net/v3/vatsim-data.json"
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-VATSIM_URL = "https://data.vatsim.net/v3/vatsim-data.json"
+# Daha önce bildirilen sektörleri tutmak için
+STATE_FILE = "last_state.txt"
 
-PREFIXES = [
-    "LR",
-    "LT",
-    "ANK"
+# Takip edilecek sektör anahtarları
+KEYWORDS = [
+    "LT", "ANK"
 ]
 
 SUFFIXES = [
-    "_CTR",
-    "_APP",
-    "_TWR",
-    "_GND",
-    "_DEL"
+    "CTR", "APP", "TWR", "GND", "DEL"
 ]
+
 
 def send_telegram(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {
+    data = {
         "chat_id": CHAT_ID,
-        "text": message
+        "text": message,
+        "parse_mode": "HTML"
     }
-    requests.post(url, json=payload)
+    requests.post(url, data=data)
 
-def check_vatsim():
-    data = requests.get(VATSIM_URL, timeout=20).json()
+
+def load_last_state():
+    try:
+        with open(STATE_FILE, "r") as f:
+            return set(f.read().splitlines())
+    except FileNotFoundError:
+        return set()
+
+
+def save_last_state(state):
+    with open(STATE_FILE, "w") as f:
+        for s in state:
+            f.write(s + "\n")
+
+
+def sector_matches(callsign):
+    callsign = callsign.upper()
+
+    if not any(k in callsign for k in KEYWORDS):
+        return False
+
+    return any(callsign.endswith(s) for s in SUFFIXES)
+
+
+def main():
+    response = requests.get(VATSIM_DATA_URL, timeout=15)
+    data = response.json()
+
     controllers = data.get("controllers", [])
 
-    found = []
+    active_sectors = set()
 
     for c in controllers:
-        callsign = c.get("callsign", "").upper()
+        callsign = c.get("callsign", "")
+        if sector_matches(callsign):
+            active_sectors.add(callsign)
 
-        if not any(callsign.startswith(p) for p in PREFIXES):
-            continue
+    last_state = load_last_state()
 
-        if not any(callsign.endswith(s) for s in SUFFIXES):
-            continue
+    new_sectors = active_sectors - last_state
 
-        found.append(
-            f"📡 {callsign}\n"
-            f"👤 {c.get('name')}\n"
-            f"📻 {c.get('frequency')}"
-        )
+    if new_sectors:
+        sector_list = "\n".join(f"• {s}" for s in sorted(new_sectors))
 
-    if found:
         message = (
-            "VATSIM Turkey sectors are now onlineK\n\n" +
-            "\n\n".join(found)
+            "<b>VATSIM Turkey sectors are now online.</b>\n\n"
+            f"{sector_list}"
         )
+
         send_telegram(message)
 
+    save_last_state(active_sectors)
+
+
 if __name__ == "__main__":
-    check_vatsim()
+    main()
