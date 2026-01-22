@@ -15,6 +15,9 @@ KEYWORDS = [
 SUFFIXES = [
     "_CTR",
     "_APP"
+    "_TWR"
+    "_GND"
+    "_DEL"
 ]
 
 notified = set()
