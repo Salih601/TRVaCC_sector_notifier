@@ -51,7 +51,7 @@ def check_vatsim():
 
     if found:
         message = (
-            "🛫 VATSIM TÜRKİYE SEKTÖR AÇIK\n\n" +
+            "VATSIM Turkey sectors are now onlineK\n\n" +
             "\n\n".join(found)
         )
         send_telegram(message)
