@@ -8,7 +8,7 @@ CHAT_ID = os.getenv("CHAT_ID")
 
 STATE_FILE = "last_state.txt"
 
-KEYWORDS = ["LR", "ANK"]
+KEYWORDS = ["LT", "ANK"]
 SUFFIXES = ["CTR", "APP", "TWR", "GND", "DEL"]
 
 
