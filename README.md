@@ -1,2 +1,2 @@
-# TRVaCC Sector Automated Notification
+# TRVaCC Automated Sector Notification
 VATSIM Turkey ATC notification bot
