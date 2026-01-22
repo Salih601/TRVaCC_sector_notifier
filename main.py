@@ -8,7 +8,6 @@ CHAT_ID = os.getenv("CHAT_ID")
 
 STATE_FILE = "last_state.txt"
 
-KEYWORDS = ["LT", "ANK"]
 SUFFIXES = ["CTR", "APP", "TWR", "GND", "DEL"]
 
 
@@ -39,7 +38,8 @@ def save_last_state(state):
 def sector_matches(callsign):
     callsign = callsign.upper()
 
-    if not any(k in callsign for k in KEYWORDS):
+    # 🔒 SADECE "LT" ile başlayanlar
+    if not callsign.startswith("LT"):
         return False
 
     return any(callsign.endswith(s) for s in SUFFIXES)
