@@ -1,9 +1,13 @@
 name: VATSIM TR Sector Notifier
 
 on:
+  push:
+    branches:
+      - main
   schedule:
     - cron: "*/2 * * * *"
   workflow_dispatch:
+
 
 jobs:
   run-check:
