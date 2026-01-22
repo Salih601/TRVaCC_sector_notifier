@@ -7,6 +7,7 @@ CHAT_ID = os.getenv("CHAT_ID")
 VATSIM_URL = "https://data.vatsim.net/v3/vatsim-data.json"
 
 PREFIXES = [
+    "LR",
     "LT",
     "ANK"
 ]
