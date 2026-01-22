@@ -1,23 +1,15 @@
 import requests
 import os
-import time
 
 VATSIM_DATA_URL = "https://data.vatsim.net/v3/vatsim-data.json"
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-# Daha önce bildirilen sektörleri tutmak için
 STATE_FILE = "last_state.txt"
 
-# Takip edilecek sektör anahtarları
-KEYWORDS = [
-    "LR", "LT", "ANK"
-]
-
-SUFFIXES = [
-    "CTR", "APP", "TWR", "GND", "DEL"
-]
+KEYWORDS = ["LT", "ANK"]
+SUFFIXES = ["CTR", "APP", "TWR", "GND", "DEL"]
 
 
 def send_telegram(message):
@@ -59,28 +51,37 @@ def main():
 
     controllers = data.get("controllers", [])
 
-    active_sectors = set()
+    active_sectors = {}
+    last_state = load_last_state()
 
     for c in controllers:
         callsign = c.get("callsign", "")
         if sector_matches(callsign):
-            active_sectors.add(callsign)
+            active_sectors[callsign] = {
+                "name": c.get("name", "Unknown"),
+                "frequency": c.get("frequency", "N/A")
+            }
 
-    last_state = load_last_state()
-
-    new_sectors = active_sectors - last_state
+    new_sectors = set(active_sectors.keys()) - last_state
 
     if new_sectors:
-        sector_list = "\n".join(f"• {s}" for s in sorted(new_sectors))
+        lines = []
+        for s in sorted(new_sectors):
+            info = active_sectors[s]
+            lines.append(
+                f"▸ <b>{s}</b>\n"
+                f"  │ {info['name']} — {info['frequency']}"
+            )
 
         message = (
-            "<b>VATSIM Turkey sectors are now online.</b>\n\n"
-            f"{sector_list}"
+            "<b>VATSIM Turkey sectors are now online.</b>\n"
+            "────────────────────────\n\n"
+            + "\n\n".join(lines)
         )
 
         send_telegram(message)
 
-    save_last_state(active_sectors)
+    save_last_state(set(active_sectors.keys()))
 
 
 if __name__ == "__main__":
