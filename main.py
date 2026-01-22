@@ -12,7 +12,7 @@ STATE_FILE = "last_state.txt"
 
 # Takip edilecek sektör anahtarları
 KEYWORDS = [
-    "LT", "ANK"
+    "LR", "LT", "ANK"
 ]
 
 SUFFIXES = [
