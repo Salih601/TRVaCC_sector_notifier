@@ -39,7 +39,7 @@ def sector_matches(callsign):
     callsign = callsign.upper()
 
     # 🔒 SADECE "LT" ile başlayanlar
-    if not callsign.startswith("LB"):
+    if not callsign.startswith("LT"):
         return False
 
     return any(callsign.endswith(s) for s in SUFFIXES)
