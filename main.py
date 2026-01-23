@@ -8,7 +8,7 @@ CHAT_ID = os.getenv("CHAT_ID")
 STATE_FILE = "last_state.txt"
 
 VALID_SUFFIXES = ("_CTR", "_APP", "_TWR", "_GND", "_DEL")
-TURKEY_PREFIXES = ("ANK_", "IST_","LT_")
+TR_PREFIXES = ("ANK_", "IST_", "ESB_", "LT")
 
 VATSIM_DATA_URL = "https://data.vatsim.net/v3/vatsim-data.json"
 
@@ -24,7 +24,7 @@ def send_telegram(message):
 
 
 def is_turkey_sector(callsign: str) -> bool:
-    return callsign.startswith(TURKEY_PREFIXES) and callsign.endswith(VALID_SUFFIXES)
+    return callsign.startswith(TR_PREFIXES) and callsign.endswith(VALID_SUFFIXES)
 
 
 def get_online_sectors():
@@ -35,6 +35,7 @@ def get_online_sectors():
 
     for c in controllers:
         callsign = c["callsign"]
+
         if is_turkey_sector(callsign):
             sectors[callsign] = {
                 "frequency": c.get("frequency", "—"),
