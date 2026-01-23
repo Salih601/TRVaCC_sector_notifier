@@ -21,8 +21,8 @@ jobs:
       - name: Gereksinimleri kur
         run: pip install -r requirements.txt
 
-      - name: State cache yükle
-        uses: actions/cache@v4
+      - name: State cache restore
+        uses: actions/cache/restore@v4
         with:
           path: last_state.txt
           key: vatsim-sector-state
@@ -32,3 +32,9 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: python main.py
+
+      - name: State cache save
+        uses: actions/cache/save@v4
+        with:
+          path: last_state.txt
+          key: vatsim-sector-state
