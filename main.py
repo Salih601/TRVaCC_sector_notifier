@@ -8,7 +8,7 @@ CHAT_ID = os.getenv("CHAT_ID")
 STATE_FILE = "last_state.txt"
 
 VALID_SUFFIXES = ("_CTR", "_APP", "_TWR", "_GND", "_DEL")
-TURKEY_PREFIXES = ("ANK_", "IST_")
+TURKEY_PREFIXES = ("ANK_", "IST_","LT_")
 
 VATSIM_DATA_URL = "https://data.vatsim.net/v3/vatsim-data.json"
 
