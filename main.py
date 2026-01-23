@@ -8,7 +8,7 @@ CHAT_ID = os.getenv("CHAT_ID")
 STATE_FILE = "last_state.txt"
 
 VALID_SUFFIXES = ("_CTR", "_APP", "_TWR", "_GND", "_DEL")
-TR_PREFIXES = ("ANK_", "IST_", "ESB_", "LT")
+TR_PREFIXES = ("LT", "ANKARA_", "IST_", "ESB_")
 
 VATSIM_DATA_URL = "https://data.vatsim.net/v3/vatsim-data.json"
 
@@ -35,7 +35,6 @@ def get_online_sectors():
 
     for c in controllers:
         callsign = c["callsign"]
-
         if is_turkey_sector(callsign):
             sectors[callsign] = {
                 "frequency": c.get("frequency", "—"),
