@@ -1,77 +1,84 @@
+import requests
 import os
 import json
-import requests
-
-VATSIM_URL = "https://data.vatsim.net/v3/vatsim-data.json"
-STATE_FILE = "last_state.txt"
 
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-CHAT_IDS = os.getenv("CHAT_ID", "").split(",")
+CHAT_ID = os.getenv("CHAT_ID")
+
+STATE_FILE = "last_state.txt"
+
+VALID_SUFFIXES = ("_CTR", "_APP", "_TWR", "_GND", "_DEL")
+TURKEY_PREFIXES = (
+    "ANK_", "IST_", "ESB_", "ADA_", "AYT_", "DLM_", "BJV_", "ADB_", "ASR_"
+)
+
+VATSIM_DATA_URL = "https://data.vatsim.net/v3/vatsim-data.json"
 
 
-def send_telegram(message: str):
-    for chat_id in CHAT_IDS:
-        chat_id = chat_id.strip()
-        if not chat_id:
-            continue
-        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-        payload = {
-            "chat_id": chat_id,
-            "text": message,
-            "parse_mode": "HTML"
-        }
-        requests.post(url, json=payload, timeout=10)
+def send_telegram(message):
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    data = {
+        "chat_id": CHAT_ID,
+        "text": message,
+        "parse_mode": "HTML"
+    }
+    requests.post(url, data=data)
 
 
-def load_previous_state():
-    if not os.path.exists(STATE_FILE):
-        return set()
-    with open(STATE_FILE, "r") as f:
-        return set(line.strip() for line in f if line.strip())
+def is_turkey_sector(callsign: str) -> bool:
+    return (
+        callsign.endswith(VALID_SUFFIXES)
+        and callsign.startswith(TURKEY_PREFIXES)
+    )
 
 
-def save_state(sectors):
-    with open(STATE_FILE, "w") as f:
-        for s in sorted(sectors):
-            f.write(s + "\n")
+def get_online_sectors():
+    data = requests.get(VATSIM_DATA_URL, timeout=15).json()
+    controllers = data.get("controllers", [])
 
+    sectors = {}
 
-def get_current_sectors():
-    response = requests.get(VATSIM_URL, timeout=15)
-    data = response.json()
-
-    sectors = set()
-
-    for controller in data.get("controllers", []):
-        callsign = controller.get("callsign", "")
-        if "_" in callsign:
-            sector = callsign.split("_")[0]
-            if sector.startswith("LT"):
-                sectors.add(sector)
+    for c in controllers:
+        callsign = c["callsign"]
+        if is_turkey_sector(callsign):
+            sectors[callsign] = c["frequency"]
 
     return sectors
 
 
+def load_last_state():
+    if not os.path.exists(STATE_FILE):
+        return {}
+
+    with open(STATE_FILE, "r") as f:
+        return json.load(f)
+
+
+def save_state(state):
+    with open(STATE_FILE, "w") as f:
+        json.dump(state, f)
+
+
 def main():
-    previous_sectors = load_previous_state()
-    current_sectors = get_current_sectors()
+    previous = load_last_state()
+    current = get_online_sectors()
 
-    opened = current_sectors - previous_sectors
-    closed = previous_sectors - current_sectors
+    opened = current.keys() - previous.keys()
+    closed = previous.keys() - current.keys()
 
-    for sector in sorted(opened):
+    for s in opened:
         send_telegram(
-            f"<b>SEKTÖR AÇILDI</b>\n"
-            f"✈️ {sector}"
+            f"<b>VATSIM Turkey sectors are now online.</b>\n\n"
+            f"{s}  •  {current[s]}"
         )
 
-    for sector in sorted(closed):
+    for s in closed:
         send_telegram(
-            f"<b>SEKTÖR KAPANDI</b>\n"
-            f"{sector}"
+            f"<b>VATSIM Turkey sector has gone offline.</b>\n\n"
+            f"{s}"
         )
 
-    save_state(current_sectors)
+    save_state(current)
 
 
 if __name__ == "__main__":
