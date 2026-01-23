@@ -8,9 +8,7 @@ CHAT_ID = os.getenv("CHAT_ID")
 STATE_FILE = "last_state.txt"
 
 VALID_SUFFIXES = ("_CTR", "_APP", "_TWR", "_GND", "_DEL")
-TURKEY_PREFIXES = (
-    "ANK_", "IST_", "ESB_", "ADA_", "AYT_", "DLM_", "BJV_", "ADB_", "ASR_"
-)
+TURKEY_PREFIXES = ("ANK_", "IST_")
 
 VATSIM_DATA_URL = "https://data.vatsim.net/v3/vatsim-data.json"
 
@@ -26,10 +24,7 @@ def send_telegram(message):
 
 
 def is_turkey_sector(callsign: str) -> bool:
-    return (
-        callsign.endswith(VALID_SUFFIXES)
-        and callsign.startswith(TURKEY_PREFIXES)
-    )
+    return callsign.startswith(TURKEY_PREFIXES) and callsign.endswith(VALID_SUFFIXES)
 
 
 def get_online_sectors():
@@ -41,7 +36,10 @@ def get_online_sectors():
     for c in controllers:
         callsign = c["callsign"]
         if is_turkey_sector(callsign):
-            sectors[callsign] = c["frequency"]
+            sectors[callsign] = {
+                "frequency": c.get("frequency", "—"),
+                "name": c.get("name", "Unknown")
+            }
 
     return sectors
 
@@ -67,15 +65,19 @@ def main():
     closed = previous.keys() - current.keys()
 
     for s in opened:
+        info = current[s]
         send_telegram(
-            f"<b>VATSIM Turkey sectors are now online.</b>\n\n"
-            f"{s}  •  {current[s]}"
+            "<b>VATSIM Turkey sectors are now online.</b>\n\n"
+            f"{s}\n"
+            f"{info['frequency']} • {info['name']}"
         )
 
     for s in closed:
+        info = previous[s]
         send_telegram(
-            f"<b>VATSIM Turkey sector has gone offline.</b>\n\n"
-            f"{s}"
+            "<b>VATSIM Turkey sector has gone offline.</b>\n\n"
+            f"{s}\n"
+            f"{info['frequency']} • {info['name']}"
         )
 
     save_state(current)
