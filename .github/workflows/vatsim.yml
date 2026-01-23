@@ -1,13 +1,9 @@
 name: VATSIM TR Sector Notifier
 
 on:
-  push:
-    branches:
-      - main
   schedule:
     - cron: "*/2 * * * *"
   workflow_dispatch:
-
 
 jobs:
   run-check:
@@ -24,6 +20,12 @@ jobs:
 
       - name: Gereksinimleri kur
         run: pip install -r requirements.txt
+
+      - name: State cache yükle
+        uses: actions/cache@v4
+        with:
+          path: last_state.txt
+          key: vatsim-sector-state
 
       - name: Scripti çalıştır
         env:
