@@ -21,11 +21,11 @@ jobs:
       - name: Gereksinimleri kur
         run: pip install -r requirements.txt
 
-      - name: State cache restore
-        uses: actions/cache/restore@v4
+      - name: Önceki state'i indir
+        uses: actions/download-artifact@v4
         with:
-          path: last_state.txt
-          key: vatsim-sector-state
+          name: vatsim-state
+        continue-on-error: true
 
       - name: Scripti çalıştır
         env:
@@ -33,8 +33,8 @@ jobs:
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: python main.py
 
-      - name: State cache save
-        uses: actions/cache/save@v4
+      - name: Yeni state'i yükle
+        uses: actions/upload-artifact@v4
         with:
+          name: vatsim-state
           path: last_state.txt
-          key: vatsim-sector-state
